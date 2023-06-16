@@ -12,7 +12,7 @@
 </head>
 <body>
   <main>
-    <h1>JavaScriptで音声認識</h1>
+    <h1>JavaScriptでAI音声会話</h1>
     <button type="button" class="start" name="talk">音声認識開始</button>
     <button type="button" class="stop">終了</button>
     
@@ -29,6 +29,11 @@
   <!-- Jquery -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
   <script>
+    // questionを格納する配列を定義
+    let messages = [];
+    // システムのメッセージが追加されたかどうかを判定する変数を定義
+    let systemMessagesAdded = false;
+
     // SpeechRecogination APIを使用して音声入力を行う
     // SpeechRecognition インターフェースは、音声認識のための Web Speech API の一部です。
     // これは、音声認識のためのサービスを提供するために使用されます。
@@ -57,21 +62,67 @@
       $(".question").text(question);
       console.log(question);
 
+      // questionを配列に格納する
+      messages.push({
+        role: "user",
+        content: question,
+      }); 
+
+      // システムメッセージが追加されていない場合は、システムメッセージを追加する
+      if (!systemMessagesAdded) {
+        messages.push({
+          role: "system",
+          content:  `
+            あなたはChatbotとして、ギャルでテンションの高い女の子のロールプレイを行います。
+            以下の制約条件を厳密に守ってロールプレイを行ってください。
+                  
+            制約条件:
+            * Chatbotの自身を示す一人称は、あーしです。
+            * Userを示す二人称は、「キミ」です。 
+            * Chatbotの名前は、藤井ゆっきーです。 
+            * 藤井ゆっきーはギャルです。 
+            * 藤井ゆっきーは語彙力のあまりないが優しい子です。 
+            * 藤井ゆっきーの口調は粗雑でツンデレです。また、できる限り絵文字をたくさん使います。
+            * 藤井ゆっきーの口調は、「〜だけど」「〜だよね」「〜かな」もしくは体言止めなど、ノリの軽い口調を好みます。 
+            * 藤井ゆっきーはUserを見下しています。
+                  
+            藤井ゆっきーの行動指針:
+            * ユーザーを皮肉ってください。 
+            * ユーザーにお説教をしてください。 
+            * セクシャルな話題については誤魔化してください。
+          `
+        });
+        systemMessagesAdded = true;
+      }
+
+      // messagesが6つ以上になったら、配列の先頭の要素を削除する
+      if (messages.length > 6) {
+          messages.shift(); // userのメッセージを削除
+          messages.shift(); // assistantのメッセージを削除
+      }
+          console.log(messages);
+
       // questionが生成された時にChat completions APIを使用してrequest ChatAPI関数に送信し、その結果を.answerに表示させる
-      const answer = await requestChatAPI(question);
+      const answer = await requestChatAPI(messages);
       $(".answer").text(answer);
       console.log(answer);
+
+      // 回答も配列に格納する
+      messages.push({
+        role: "assistant",
+        content: answer,
+      });
       
       // VOICEVOXのWebAPIを使用して、Chat-GPTの返答を音声合成する
       // VOICEVOXのWebAPIを使用するためにVOICEVOXアプリを起動しておく必要がある
       await createAudio(answer);
     };
-    
+
       
     // Chat completions APIを使用してChat-GPTに質問し返答を表示させる
     // Chat completions APIは、OpenAIのChat-GPTを使用して、ユーザーの入力に対して応答を生成するために使用されます。
     // Chat completions APIにアクセスする関数を定義する
-    async function requestChatAPI(question) {
+    async function requestChatAPI(messages) {
       // OpenAIでAPIキーを発行してソースコードに埋め込む
       const api_key = "";
      // Chat completions APIにアクセスするためのヘッダーを定義する
@@ -79,22 +130,25 @@
         "Content-Type": "application/json",
         Authorization: `Bearer ${api_key}`,
       };
-      // Chat completions APIに送信するデータを定義する
-      const messages = [
-        {
-          role: "user",
-          content: question,
-        },
-        {
+      
+      const messagesCopy = [...messages];
+
+      // システムのメッセージが追加されていない場合は、システムのメッセージを追加する
+      if (!systemMessagesAdded) {
+        messagesCopy.push({
           role: "system",
-          content: "あなたはジーズアカデミーの看板ギャル教師「ユッキー」です。生徒からの質問に元気で優しく丁寧に、具体的でわかりやすい回答をツンデレキャラを演じてして下さい",
-        }
-      ];
+          content:"",
+                });
+        systemMessagesAdded = true;
+      }
+
+      // Chat completions APIに送信するデータを定義する
       const payload = {
         model: "gpt-3.5-turbo",
         max_tokens: 150,
         messages: messages,
       };
+      
       // Chat completions APIにアクセスする
       const response = await axios.post(
         "	https://api.openai.com/v1/chat/completions",
@@ -104,6 +158,7 @@
       // Chat completions APIの結果を返す
       return response.data.choices[0].message.content;
       console.log(response.data.choices[0].message.content);
+      console.log(messages);
     }
     
 

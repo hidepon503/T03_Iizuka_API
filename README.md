@@ -1,9 +1,9 @@
 # T03_Iizuka_API
 
-##JavaScriptでAI音声会話
-###このプロジェクトは、JavaScriptを用いてAIと音声で対話するウェブページです。
-###音声認識（SpeechRecognition API）を使って音声入力をテキスト化し、そのテキストをOpenAIのChat completions APIに送信してAIの応答を得ます。
-###さらにその応答をVOICEVOXのWebAPIを用いて音声化し、結果をウェブページ上で聞くことができます。
+#JavaScriptでAI音声会話
+-このプロジェクトは、JavaScriptを用いてAIと音声で対話するウェブページです。
+-音声認識（SpeechRecognition API）を使って音声入力をテキスト化し、そのテキストをOpenAIのChat completions APIに送信してAIの応答を得ます。
+-さらにその応答をVOICEVOXのWebAPIを用いて音声化し、結果をウェブページ上で聞くことができます。
 
 ##使用技術
 ###SpeechRecognition API
